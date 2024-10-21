@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Tracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script>
+        const apiUrl = 'https://hourly-tracker.onrender.com';
+
+        async function saveActivity(event) {
+            event.preventDefault();
+            const hour = document.getElementById('hour').value;
+            const activity = document.getElementById('activity').value;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hour, activity })
+                });
+
+                if (response.ok) {
+                    alert('Activity saved!');
+                    document.getElementById('activity-form').reset();
+                    fetchActivities();
+                } else {
+                    alert('Failed to save activity.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Could not connect to the backend.');
+            }
+        }
+
+        async function fetchActivities() {
+            try {
+                const response = await fetch(apiUrl);
+                const activities = await response.json();
+                const tableBody = document.getElementById('activities-table-body');
+                tableBody.innerHTML = '';
+
+                activities.forEach(activity => {
+                    const row = `<tr>
+                        <td>${activity.timestamp}</td>
+                        <td>${activity.hour}</td>
+                        <td>${activity.activity}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Could not load activities.');
+            }
+        }
+
+        window.onload = fetchActivities;
+    </script>
+</head>
+<body class="container mt-5">
+    <h1 class="text-center mb-4">What Did You Do This Hour?</h1>
+    <form id="activity-form" onsubmit="saveActivity(event)" class="mb-3">
+        <div class="mb-3">
+            <label for="hour" class="form-label">Select Hour</label>
+            <input type="time" id="hour" name="hour" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="activity" class="form-label">Activity</label>
+            <textarea id="activity" name="activity" class="form-control" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Save Activity</button>
+    </form>
+
+    <h2 class="text-center mt-5 mb-4">Your Activity Log</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Hour</th>
+                <th>Activity</th>
+            </tr>
+        </thead>
+        <tbody id="activities-table-body"></tbody>
+    </table>
+</body>
+</html>
